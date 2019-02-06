@@ -18,11 +18,49 @@ class ViewController: UIViewController {
         view.calendarDataSource = self
         view.calendarDelegate = self
         view.backgroundColor = .black
+        view.scrollDirection = .horizontal
+        view.scrollingMode = .stopAtEachSection
+        view.minimumInteritemSpacing = 0
+        view.minimumLineSpacing = 0
         view.register(CalendarDayCell.self, forCellWithReuseIdentifier: "CalendarDayCell")
         return view
     }()
+    
+    let prefButton = UIButton()
+    let nextButton = UIButton()
+    let monthLabel = UILabel()
+    lazy var calendarNavigation: UIStackView = {
+        let view = UIStackView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.axis = .horizontal
+        view.distribution = .fillProportionally
+        
+        prefButton.translatesAutoresizingMaskIntoConstraints = false
+        prefButton.setTitle("Pref", for: .normal)
+        prefButton.backgroundColor = .black
+        prefButton.addTarget(self, action: #selector(didTapNavigation(sender:)), for: .touchUpInside)
+        
+        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        nextButton.setTitle("Next", for: .normal)
+        nextButton.backgroundColor = .black
+        nextButton.addTarget(self, action: #selector(didTapNavigation(sender:)), for: .touchUpInside)
+        
+        monthLabel.translatesAutoresizingMaskIntoConstraints = false
+        monthLabel.textAlignment = .center
+        monthLabel.backgroundColor = .black
+        monthLabel.textColor = .white
+        
+        view.addArrangedSubview(prefButton)
+        view.addArrangedSubview(monthLabel)
+        view.addArrangedSubview(nextButton)
+        
+        return view
+    }()
+    
     let formatter = DateFormatter()
     let currentCalendar = Calendar.current
+    var dateNow = Date()
+    var endDate = Date()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,6 +68,7 @@ class ViewController: UIViewController {
         
         formatter.dateFormat = "yyyy MM dd"
         setupCalendarView()
+        calendarView.scrollToSegment(.end)
     }
     
     func setupCalendarView(){
@@ -40,8 +79,29 @@ class ViewController: UIViewController {
             calendarView.rightAnchor.constraint(equalTo: view.rightAnchor),
             calendarView.heightAnchor.constraint(equalTo: calendarView.widthAnchor)
             ])
+        
+        view.addSubview(calendarNavigation)
+        NSLayoutConstraint.activate([
+            calendarNavigation.topAnchor.constraint(equalTo: calendarView.bottomAnchor),
+            calendarNavigation.leftAnchor.constraint(equalTo: view.leftAnchor),
+            calendarNavigation.rightAnchor.constraint(equalTo: view.rightAnchor),
+            calendarNavigation.heightAnchor.constraint(equalToConstant: 48)
+            ])
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        dateNow = Date()
+        endDate = dateNow
     }
 
+    @objc func didTapNavigation(sender: UIButton){
+        if sender == prefButton{
+            calendarView.scrollToSegment(.previous)
+        }else{
+            calendarView.scrollToSegment(.next)
+        }
+    }
 }
 
 extension ViewController: JTAppleCalendarViewDelegate, JTAppleCalendarViewDataSource{
@@ -71,7 +131,7 @@ extension ViewController: JTAppleCalendarViewDelegate, JTAppleCalendarViewDataSo
     
     func configureCalendar(_ calendar: JTAppleCalendarView) -> ConfigurationParameters {
         let startDate = formatter.date(from: "2016 01 01")! // You can use date generated from a formatter
-        let endDate = Date()                                // You can also use dates created from this function
+        endDate = dateNow                                   // You can also use dates created from this function
         let parameters = ConfigurationParameters(
             startDate: startDate,
             endDate: endDate,
@@ -82,6 +142,11 @@ extension ViewController: JTAppleCalendarViewDelegate, JTAppleCalendarViewDataSo
             firstDayOfWeek: .sunday)
         
         return parameters
+    }
+    
+    func calendar(_ calendar: JTAppleCalendarView, didScrollToDateSegmentWith visibleDates: DateSegmentInfo) {
+        let currentMonth = visibleDates.monthDates.first
+        monthLabel.text = "\(currentMonth?.date.string(format: "MMMM yyyy") ?? "")"
     }
 }
 

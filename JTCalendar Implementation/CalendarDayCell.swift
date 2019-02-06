@@ -21,6 +21,8 @@ class CalendarDayCell: JTAppleCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
+        self.layer.cornerRadius = self.frame.size.width / 2
+        self.layer.masksToBounds = true
         setupView()
     }
     
@@ -35,5 +37,16 @@ class CalendarDayCell: JTAppleCell {
             dayLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
             dayLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor)
             ])
+        
     }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+    }
+    
+    override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+        
+    }
+    
 }
